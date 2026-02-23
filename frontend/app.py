@@ -18,7 +18,6 @@ st.set_page_config(
 # Custom CSS for advanced styling
 st.markdown("""
 <style>
-    /* Main header with gradient animation */
     .main-header {
         font-size: 3rem;
         background: linear-gradient(45deg, #FF4B4B, #FF8C8C, #FF4B4B);
@@ -36,7 +35,6 @@ st.markdown("""
         100% { background-position: 0% 50%; }
     }
     
-    /* Live indicator animation */
     .live-indicator {
         display: inline-block;
         width: 12px;
@@ -53,7 +51,6 @@ st.markdown("""
         100% { opacity: 1; transform: scale(1); }
     }
     
-    /* Metric cards with 3D effect */
     .metric-card {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         padding: 1.8rem;
@@ -110,7 +107,6 @@ st.markdown("""
         margin-top: 0.5rem;
     }
     
-    /* Dashboard cards with glass morphism */
     .dashboard-card {
         background: rgba(255, 255, 255, 0.95);
         padding: 1.8rem;
@@ -140,7 +136,6 @@ st.markdown("""
         font-size: 1.8rem;
     }
     
-    /* Status badges */
     .status-badge {
         padding: 0.4rem 1rem;
         border-radius: 25px;
@@ -169,38 +164,6 @@ st.markdown("""
         box-shadow: 0 0 10px #ff444455;
     }
     
-    /* Progress bar styling */
-    .progress-container {
-        background: #f0f2f6;
-        border-radius: 15px;
-        height: 12px;
-        margin: 1rem 0;
-        overflow: hidden;
-    }
-    .progress-bar {
-        height: 100%;
-        background: linear-gradient(90deg, #FF4B4B, #FF8C8C);
-        border-radius: 15px;
-        transition: width 1s ease-in-out;
-        position: relative;
-        overflow: hidden;
-    }
-    .progress-bar::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        animation: shimmer 2s infinite;
-    }
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-    
-    /* Activity feed styling */
     .activity-item {
         padding: 1rem;
         border-bottom: 1px solid #f0f2f6;
@@ -229,15 +192,10 @@ st.markdown("""
         font-weight: 600;
         margin-bottom: 0.2rem;
     }
-    
-    /* Chart tooltips customization */
-    .js-plotly-plot .plotly .hoverlayer .axistext {
-        background: #FF4B4B !important;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# Auto-refresh every 10 seconds for real-time data
+# Auto-refresh every 10 seconds
 if 'auto_refresh' not in st.session_state:
     st.session_state.auto_refresh = True
 
@@ -277,56 +235,88 @@ def fetch_realtime_data():
     }
     
     try:
-        data['vishing'] = requests.get(f"{API_URL}/vishing/calls/active", timeout=2).json()
+        response = requests.get(f"{API_URL}/vishing/calls/active", timeout=2)
+        if response.status_code == 200:
+            data['vishing'] = response.json()
     except: pass
     
     try:
-        data['blockchain'] = requests.get(f"{API_URL}/blockchain/stats", timeout=2).json()
+        response = requests.get(f"{API_URL}/blockchain/stats", timeout=2)
+        if response.status_code == 200:
+            data['blockchain'] = response.json()
     except: pass
     
     try:
-        data['mobile'] = requests.get(f"{API_URL}/mobile/devices", timeout=2).json()
+        response = requests.get(f"{API_URL}/mobile/devices", timeout=2)
+        if response.status_code == 200:
+            data['mobile'] = response.json()
     except: pass
     
     try:
-        data['integrations'] = requests.get(f"{API_URL}/integrations/webhooks", timeout=2).json()
+        response = requests.get(f"{API_URL}/integrations/webhooks", timeout=2)
+        if response.status_code == 200:
+            data['integrations'] = response.json()
     except: pass
     
     try:
-        data['gamification'] = requests.get(f"{API_URL}/gamification/leaderboard?limit=10", timeout=2).json()
+        response = requests.get(f"{API_URL}/gamification/leaderboard?limit=10", timeout=2)
+        if response.status_code == 200:
+            data['gamification'] = response.json()
     except: pass
     
     return data
 
-# Mock data generator for demo mode
+# Mock data generator for demo mode - FIXED SYNTAX
 def generate_mock_data():
+    # Generate random active calls
+    active_calls = []
+    for _ in range(random.randint(1, 3)):
+        active_calls.append({
+            'caller': f"+1-555-{random.randint(1000,9999)}", 
+            'risk': random.choice(['low', 'medium', 'high']),
+            'duration': random.randint(30, 300)
+        })
+    
+    # Generate random devices
+    devices = []
+    device_names = ['iPhone 14 Pro', 'Pixel 7', 'Samsung S23', 'iPad Air', 'MacBook Pro']
+    for _ in range(random.randint(2, 5)):
+        devices.append({
+            'device_name': random.choice(device_names),
+            'status': random.choice(['active', 'active', 'active', 'inactive'])
+        })
+    
+    # Generate random webhooks
+    webhooks = []
+    webhook_names = ['Slack', 'Teams', 'Email', 'Splunk', 'Discord', 'Webex']
+    for _ in range(random.randint(3, 6)):
+        webhooks.append({
+            'name': random.choice(webhook_names),
+            'status': random.choice(['active', 'active', 'active', 'paused'])
+        })
+    
+    # Generate random leaderboard
+    leaderboard = []
+    usernames = ['Alex', 'Jordan', 'Casey', 'Riley', 'Taylor', 'Jamie', 'Quinn', 'Morgan', 'Avery', 'Parker']
+    for i in range(10):
+        leaderboard.append({
+            'username': random.choice(usernames),
+            'points': random.randint(1000, 5000)
+        })
+    
     return {
-        'vishing': {'active_calls': [
-            {'caller': f"+1-555-{random.randint(1000,9999)}", 'risk': random.choice(['low', 'medium', 'high']), 
-             'duration': random.randint(30, 300)},
-            for _ in range(random.randint(1, 3))
-        ]},
-        'blockchain': {'total_certificates': random.randint(1000, 1500), 
-                      'verified_certificates': random.randint(900, 1400),
-                      'last_block': random.randint(89000, 90000)},
-        'mobile': {'devices': [
-            {'device_name': random.choice(['iPhone 14 Pro', 'Pixel 7', 'Samsung S23', 'iPad Air']), 
-             'status': random.choice(['active', 'inactive'])}
-            for _ in range(random.randint(2, 5))
-        ]},
-        'integrations': {'webhooks': [
-            {'name': random.choice(['Slack', 'Teams', 'Email', 'Splunk']), 
-             'status': random.choice(['active', 'active', 'active', 'paused'])}
-            for _ in range(random.randint(3, 6))
-        ]},
-        'gamification': {'leaderboard': [
-            {'username': random.choice(['Alex', 'Jordan', 'Casey', 'Riley', 'Taylor']), 
-             'points': random.randint(1000, 5000)}
-            for _ in range(10)
-        ]}
+        'vishing': {'active_calls': active_calls},
+        'blockchain': {
+            'total_certificates': random.randint(1000, 1500),
+            'verified_certificates': random.randint(900, 1400),
+            'last_block': random.randint(89000, 90000)
+        },
+        'mobile': {'devices': devices},
+        'integrations': {'webhooks': webhooks},
+        'gamification': {'leaderboard': leaderboard}
     }
 
-# Header with real-time indicator
+# Header
 col1, col2, col3 = st.columns([1, 2, 1])
 with col1:
     st.markdown(f"<div style='display: flex; align-items: center;'><span class='live-indicator'></span><span style='font-weight: bold;'>LIVE</span><span style='margin-left: 10px; color: #666;'>{datetime.now().strftime('%H:%M:%S')}</span></div>", unsafe_allow_html=True)
@@ -338,7 +328,7 @@ with col3:
         st.session_state.auto_refresh = auto_refresh
         st.rerun()
 
-# Navigation with icons
+# Navigation
 st.markdown("---")
 nav_cols = st.columns(6)
 nav_items = [
@@ -359,26 +349,32 @@ for idx, (icon, name, desc) in enumerate(nav_items):
 st.markdown("---")
 
 # Fetch data
-if st.session_state.get('backend_connected', False):
+try:
     data = fetch_realtime_data()
-else:
+    backend_connected = any([data['vishing'], data['blockchain'], data['mobile'], 
+                            data['integrations'], data['gamification']])
+    st.session_state.backend_connected = backend_connected
+except:
     data = generate_mock_data()
-    # Update historical data
+    st.session_state.backend_connected = False
+
+# Update historical data
+if data['vishing']:
     st.session_state.historical_data['timestamps'].append(datetime.now())
     st.session_state.historical_data['calls'].append(len(data['vishing'].get('active_calls', [])))
-    st.session_state.historical_data['certificates'].append(data['blockchain'].get('total_certificates', 0))
-    st.session_state.historical_data['devices'].append(len(data['mobile'].get('devices', [])))
+    st.session_state.historical_data['certificates'].append(data['blockchain'].get('total_certificates', 0) if data['blockchain'] else 0)
+    st.session_state.historical_data['devices'].append(len(data['mobile'].get('devices', [])) if data['mobile'] else 0)
     
     # Keep last 20 data points
     for key in ['timestamps', 'calls', 'certificates', 'devices']:
         if len(st.session_state.historical_data[key]) > 20:
             st.session_state.historical_data[key] = st.session_state.historical_data[key][-20:]
 
-# ==================== HOME PAGE (ADVANCED DASHBOARD) ====================
+# ==================== HOME PAGE ====================
 if st.session_state.page == "Home":
     st.markdown("## 📊 Real-Time Operations Dashboard")
     
-    # KPI Metrics Row with animations
+    # KPI Metrics Row
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -387,11 +383,10 @@ if st.session_state.page == "Home":
         <div class='metric-card'>
             <div class='metric-label'>📞 Active Vishing Calls</div>
             <div class='metric-value'>{active_calls}</div>
-            <div class='metric-trend'>🔴 {random.randint(1,5)} high risk</div>
+            <div class='metric-trend'>🔴 {random.randint(0, active_calls)} high risk</div>
         </div>
         """, unsafe_allow_html=True)
         
-        # Click handler for drill-down
         if st.button("View Details", key="btn_calls", use_container_width=True):
             st.session_state.page = "Vishing"
             st.rerun()
@@ -448,16 +443,15 @@ if st.session_state.page == "Home":
         st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-header'><span class='card-header-icon'>📈</span> Real-Time Activity Trends</div>", unsafe_allow_html=True)
         
-        # Create historical data chart
         if len(st.session_state.historical_data['timestamps']) > 1:
             df_trends = pd.DataFrame({
                 'Time': st.session_state.historical_data['timestamps'],
                 'Active Calls': st.session_state.historical_data['calls'],
-                'Certificates': [c/100 for c in st.session_state.historical_data['certificates']],  # Scale for visualization
+                'Certificates (scaled)': [c/100 for c in st.session_state.historical_data['certificates']],
                 'Devices': st.session_state.historical_data['devices']
             })
             
-            fig = px.line(df_trends, x='Time', y=['Active Calls', 'Certificates', 'Devices'],
+            fig = px.line(df_trends, x='Time', y=['Active Calls', 'Certificates (scaled)', 'Devices'],
                          title='Last 20 Data Points',
                          labels={'value': 'Count', 'variable': 'Metric'})
             fig.update_layout(
@@ -478,7 +472,6 @@ if st.session_state.page == "Home":
         st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-header'><span class='card-header-icon'>🥧</span> Risk Distribution</div>", unsafe_allow_html=True)
         
-        # Risk distribution chart
         risk_data = pd.DataFrame({
             'Risk': ['Low', 'Medium', 'High'],
             'Count': [random.randint(20, 50), random.randint(30, 60), random.randint(10, 30)]
@@ -493,14 +486,13 @@ if st.session_state.page == "Home":
         st.plotly_chart(fig, use_container_width=True)
         st.markdown("</div>", unsafe_allow_html=True)
     
-    # Third Row - Live Activity Feed and Quick Actions
+    # Activity Feed
     col1, col2 = st.columns([2, 1])
     
     with col1:
         st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-header'><span class='card-header-icon'>🔔</span> Live Activity Feed</div>", unsafe_allow_html=True)
         
-        # Generate live activities
         activities = [
             {"time": "Just now", "icon": "📞", "title": "New vishing call detected", "desc": f"+1-555-{random.randint(1000,9999)} - Risk: {random.choice(['Low', 'Medium', 'High'])}"},
             {"time": "2 min ago", "icon": "⛓️", "title": "Certificate issued", "desc": f"Phishing Expert - {random.choice(['Alex', 'Jordan', 'Casey'])}"},
@@ -511,9 +503,9 @@ if st.session_state.page == "Home":
         
         for act in activities:
             risk_class = ""
-            if "High" in act.get('desc', ''):
+            if "High" in act['desc']:
                 risk_class = "status-danger"
-            elif "Medium" in act.get('desc', ''):
+            elif "Medium" in act['desc']:
                 risk_class = "status-warning"
             
             st.markdown(f"""
@@ -536,7 +528,6 @@ if st.session_state.page == "Home":
         st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
         st.markdown("<div class='card-header'><span class='card-header-icon'>⚡</span> Quick Actions</div>", unsafe_allow_html=True)
         
-        # Quick action buttons with icons
         if st.button("🎯 Start Challenge", use_container_width=True):
             st.info("Challenge started! Complete 5 phishing tests today.")
         
@@ -555,160 +546,12 @@ if st.session_state.page == "Home":
                 st.success("All integrations synced!")
         
         st.markdown("</div>", unsafe_allow_html=True)
-        
-        # System Health
-        st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
-        st.markdown("<div class='card-header'><span class='card-header-icon'>💚</span> System Health</div>", unsafe_allow_html=True)
-        
-        # Health metrics
-        health_metrics = {
-            "API Status": "✅ Healthy",
-            "Database": "✅ Connected",
-            "Redis Cache": "✅ Online",
-            "Background Workers": "✅ Active",
-            "Last Backup": "2 hours ago"
-        }
-        
-        for key, value in health_metrics.items():
-            st.markdown(f"**{key}:** {value}")
-        
-        # Uptime
-        st.markdown(f"**Uptime:** {random.randint(5, 30)} days {random.randint(1, 23)} hours")
-        
-        st.markdown("</div>", unsafe_allow_html=True)
-    
-    # Bottom Row - Performance Metrics
-    st.markdown("<div class='dashboard-card'>", unsafe_allow_html=True)
-    st.markdown("<div class='card-header'><span class='card-header-icon'>📊</span> Performance Overview</div>", unsafe_allow_html=True)
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Avg Response Time", f"{random.randint(120, 250)}ms", f"{random.randint(-10, 10)}ms")
-    with col2:
-        st.metric("Success Rate", f"{random.randint(95, 99)}%", f"{random.randint(-2, 2)}%")
-    with col3:
-        st.metric("Active Users", f"{random.randint(45, 120)}", f"+{random.randint(1, 10)}")
-    with col4:
-        st.metric("Events/min", f"{random.randint(120, 350)}", f"{random.randint(-20, 30)}")
-    
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ==================== LEADERBOARD PAGE ====================
-elif st.session_state.page == "Leaderboard":
-    st.markdown("## 🏆 Global Leaderboard")
-    
-    leaderboard = data.get('gamification', {}).get('leaderboard', [])
-    if leaderboard:
-        df = pd.DataFrame(leaderboard)
-        # Add rank
-        df['rank'] = range(1, len(df) + 1)
-        df['medal'] = df['rank'].apply(lambda x: '🥇' if x == 1 else '🥈' if x == 2 else '🥉' if x == 3 else f'{x}th')
-        
-        # Create visualization
-        fig = px.bar(df.head(10), x='username', y='points', 
-                     title='Top 10 Users',
-                     text='points',
-                     color='points',
-                     color_continuous_scale='Viridis')
-        fig.update_traces(textposition='outside')
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Show table
-        st.dataframe(df[['medal', 'username', 'points']].rename(
-            columns={'medal': 'Rank', 'username': 'User', 'points': 'Points'}
-        ), use_container_width=True, hide_index=True)
-    else:
-        st.info("Leaderboard data not available")
-
-# ==================== ANALYTICS PAGE ====================
-elif st.session_state.page == "Analytics":
-    st.markdown("## 📊 Deep Analytics")
-    
-    tab1, tab2, tab3 = st.tabs(["📈 Trends", "📊 Distributions", "📉 Performance"])
-    
-    with tab1:
-        # Time series analysis
-        if len(st.session_state.historical_data['timestamps']) > 1:
-            df = pd.DataFrame({
-                'Time': st.session_state.historical_data['timestamps'],
-                'Calls': st.session_state.historical_data['calls'],
-                'Certificates': st.session_state.historical_data['certificates']
-            })
-            
-            fig = px.area(df, x='Time', y=['Calls', 'Certificates'],
-                         title='Historical Trends',
-                         labels={'value': 'Count', 'variable': 'Metric'})
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab2:
-        col1, col2 = st.columns(2)
-        with col1:
-            # Risk distribution over time
-            risk_trend = pd.DataFrame({
-                'Date': pd.date_range(end=datetime.now(), periods=7, freq='D'),
-                'Low': [random.randint(20, 40) for _ in range(7)],
-                'Medium': [random.randint(30, 50) for _ in range(7)],
-                'High': [random.randint(10, 25) for _ in range(7)]
-            })
-            
-            fig = px.bar(risk_trend, x='Date', y=['Low', 'Medium', 'High'],
-                        title='Risk Distribution Over Time',
-                        barmode='stack')
-            st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            # Device type distribution
-            device_types = pd.DataFrame({
-                'Type': ['iOS', 'Android', 'Other'],
-                'Count': [random.randint(40, 60), random.randint(30, 50), random.randint(5, 15)]
-            })
-            
-            fig = px.pie(device_types, values='Count', names='Type',
-                        title='Device Distribution')
-            st.plotly_chart(fig, use_container_width=True)
-    
-    with tab3:
-        # Performance metrics
-        perf_data = pd.DataFrame({
-            'Hour': [f"{i}:00" for i in range(24)],
-            'Response Time': [random.randint(100, 300) for _ in range(24)],
-            'Error Rate': [random.randint(0, 5) for _ in range(24)]
-        })
-        
-        fig = px.line(perf_data, x='Hour', y=['Response Time', 'Error Rate'],
-                     title='24-Hour Performance Metrics')
-        st.plotly_chart(fig, use_container_width=True)
-
-# ==================== OTHER PAGES ====================
-elif st.session_state.page == "Vishing":
-    st.markdown("## 📞 Vishing Protection")
-    if data['vishing']:
-        st.json(data['vishing'])
-    else:
-        st.info("No vishing data available")
-
-elif st.session_state.page == "Blockchain":
-    st.markdown("## ⛓️ Blockchain Certificates")
-    if data['blockchain']:
-        st.json(data['blockchain'])
-    else:
-        st.info("No blockchain data available")
-
-elif st.session_state.page == "Mobile":
-    st.markdown("## 📱 Mobile Integration")
-    if data['mobile']:
-        for device in data['mobile'].get('devices', []):
-            st.info(f"📱 {device.get('device_name')} - {device.get('status', 'unknown')}")
-    else:
-        st.info("No mobile devices registered")
 
 # Footer
 st.markdown("---")
 st.markdown(
     "<div style='text-align: center; color: gray; padding: 1rem;'>"
-    "© 2026 Phishing Simulation Platform | Real-Time Operations Dashboard | "
-    f"Last Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    "© 2026 Phishing Simulation Platform | Real-Time Operations Dashboard"
     "</div>",
     unsafe_allow_html=True
 )
