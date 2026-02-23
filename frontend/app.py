@@ -14,7 +14,7 @@ except:
     API_URL = "https://phishing-simulation-6.onrender.com/api"
     st.sidebar.warning("⚠️ Using default API URL")
 
-# Test backend connection using the working /api/test endpoint
+# Test backend connection
 backend_connected = False
 available_endpoints = {}
 
@@ -33,15 +33,27 @@ try:
 except Exception as e:
     st.sidebar.error(f"❌ Cannot connect to backend: {e}")
 
+# Add API Documentation links in sidebar
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 📚 API Documentation")
+col1, col2 = st.sidebar.columns(2)
+with col1:
+    st.markdown("[![Swagger](https://img.shields.io/badge/Swagger-UI-green)](https://phishing-simulation-6.onrender.com/docs)")
+with col2:
+    st.markdown("[![ReDoc](https://img.shields.io/badge/ReDoc-Docs-blue)](https://phishing-simulation-6.onrender.com/redoc)")
+
+st.sidebar.markdown("---")
+
 # Initialize session state
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'username' not in st.session_state:
     st.session_state.username = ""
+if 'page' not in st.session_state:
+    st.session_state.page = "Home"
 
-# Function to call API with correct paths
+# Function to call API
 def call_api(endpoint_type, method="GET", data=None):
-    """Call API using endpoint type from test response"""
     if not backend_connected or endpoint_type not in available_endpoints:
         return None
     
@@ -62,17 +74,15 @@ def call_api(endpoint_type, method="GET", data=None):
     except:
         return None
 
-# Login function using the correct auth endpoint
+# Login function
 def do_login(username, password):
     if not backend_connected:
-        # Fallback to demo mode
         if username == "demo_user" and password == "password":
             st.session_state.logged_in = True
             st.session_state.username = username
             return True, "Demo mode - backend not connected"
         return False, "Backend not connected"
     
-    # Try real login
     try:
         response = requests.post(
             f"{API_URL}/auth/demo-login",
@@ -100,7 +110,6 @@ if not st.session_state.logged_in:
     with col2:
         st.markdown("### 🔐 Login")
         
-        # Show backend status
         if backend_connected:
             st.success("✅ Backend connected - using live data")
         else:
@@ -123,8 +132,8 @@ if not st.session_state.logged_in:
 else:
     st.success(f"✅ Logged in as {st.session_state.username}")
     
-    # Simple navigation
-    col1, col2, col3, col4 = st.columns(4)
+    # Enhanced navigation with API Docs
+    col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
         if st.button("🏠 Home"):
             st.session_state.page = "Home"
@@ -137,13 +146,13 @@ else:
     with col4:
         if st.button("📞 Vishing"):
             st.session_state.page = "Vishing"
+    with col5:
+        if st.button("📚 API Docs"):
+            st.session_state.page = "API Docs"
     
     st.markdown("---")
     
     # Page content
-    if 'page' not in st.session_state:
-        st.session_state.page = "Home"
-    
     if st.session_state.page == "Home":
         st.markdown("### Dashboard")
         col1, col2, col3, col4 = st.columns(4)
@@ -170,6 +179,48 @@ else:
             st.json(data)
         else:
             st.info("Vishing data not available")
+    
+    elif st.session_state.page == "API Docs":
+        st.markdown("## 📚 API Documentation")
+        st.markdown("### Interactive API Explorer")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("#### 🔷 Swagger UI")
+            st.markdown("Interactive documentation where you can test API calls directly:")
+            st.link_button(
+                "🚀 Open Swagger UI",
+                "https://phishing-simulation-6.onrender.com/docs",
+                use_container_width=True,
+                type="primary"
+            )
+        
+        with col2:
+            st.markdown("#### 📖 ReDoc")
+            st.markdown("Clean, three-panel documentation for reference:")
+            st.link_button(
+                "📚 Open ReDoc",
+                "https://phishing-simulation-6.onrender.com/redoc",
+                use_container_width=True
+            )
+        
+        st.markdown("---")
+        st.markdown("### 🔍 Available Endpoints")
+        if available_endpoints:
+            for key, value in available_endpoints.items():
+                st.code(f"{key}: {value}", language="text")
+        
+        st.markdown("### ⚡ Quick Test")
+        if st.button("Test API Connection", use_container_width=True):
+            try:
+                test = requests.get(f"{API_URL}/test", timeout=3)
+                if test.status_code == 200:
+                    st.success("✅ API is responding!")
+                    st.json(test.json())
+                else:
+                    st.error(f"❌ API returned {test.status_code}")
+            except Exception as e:
+                st.error(f"❌ Connection failed: {e}")
     
     # Logout button
     if st.button("🚪 Logout"):
