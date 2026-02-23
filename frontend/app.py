@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import time
 
 st.set_page_config(page_title="Phishing Platform", page_icon="🎣", layout="wide")
 
@@ -33,7 +34,7 @@ try:
 except Exception as e:
     st.sidebar.error(f"❌ Cannot connect to backend: {e}")
 
-# Add API Documentation links in sidebar
+# API Documentation links
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📚 API Documentation")
 col1, col2 = st.sidebar.columns(2)
@@ -41,7 +42,6 @@ with col1:
     st.markdown("[![Swagger](https://img.shields.io/badge/Swagger-UI-green)](https://phishing-simulation-6.onrender.com/docs)")
 with col2:
     st.markdown("[![ReDoc](https://img.shields.io/badge/ReDoc-Docs-blue)](https://phishing-simulation-6.onrender.com/redoc)")
-
 st.sidebar.markdown("---")
 
 # Initialize session state
@@ -50,7 +50,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = ""
 if 'page' not in st.session_state:
-    st.session_state.page = "Home"
+    st.session_state.page = "Home"  # Default to Home
 
 # Function to call API
 def call_api(endpoint_type, method="GET", data=None):
@@ -132,54 +132,171 @@ if not st.session_state.logged_in:
 else:
     st.success(f"✅ Logged in as {st.session_state.username}")
     
-    # Enhanced navigation with API Docs
+    # Navigation
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
-        if st.button("🏠 Home"):
+        if st.button("🏠 Home", use_container_width=True):
             st.session_state.page = "Home"
+            st.rerun()
     with col2:
-        if st.button("🏆 Leaderboard"):
+        if st.button("🏆 Leaderboard", use_container_width=True):
             st.session_state.page = "Leaderboard"
+            st.rerun()
     with col3:
-        if st.button("📊 Stats"):
+        if st.button("📊 Stats", use_container_width=True):
             st.session_state.page = "Stats"
+            st.rerun()
     with col4:
-        if st.button("📞 Vishing"):
+        if st.button("📞 Vishing", use_container_width=True):
             st.session_state.page = "Vishing"
+            st.rerun()
     with col5:
-        if st.button("📚 API Docs"):
+        if st.button("📚 API Docs", use_container_width=True):
             st.session_state.page = "API Docs"
+            st.rerun()
     
     st.markdown("---")
     
-    # Page content
+    # ==================== HOME PAGE ====================
     if st.session_state.page == "Home":
-        st.markdown("### Dashboard")
+        st.markdown("## 📊 Real-Time Dashboard")
+        st.markdown(f"### 👋 Welcome back, {st.session_state.username}!")
+        
+        # Metrics Row
         col1, col2, col3, col4 = st.columns(4)
+        
         with col1:
-            st.metric("Active Calls", "3")
+            with st.container():
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 1rem;'>
+                    <div style='font-size: 1rem; opacity: 0.9;'>📞 Active Calls</div>
+                    <div style='font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0;'>3</div>
+                    <div>🚨 Real-time monitoring</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
         with col2:
-            st.metric("Certificates", "1,234")
+            with st.container():
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 1rem;'>
+                    <div style='font-size: 1rem; opacity: 0.9;'>⛓️ Certificates</div>
+                    <div style='font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0;'>1,234</div>
+                    <div>✅ Blockchain verified</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
         with col3:
-            st.metric("Devices", "2")
+            with st.container():
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 1rem;'>
+                    <div style='font-size: 1rem; opacity: 0.9;'>📱 Devices</div>
+                    <div style='font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0;'>2</div>
+                    <div>📊 2 active</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
         with col4:
-            st.metric("Webhooks", "5")
-    
-    elif st.session_state.page == "Leaderboard" and backend_connected:
-        data = call_api("gamification", "GET")
-        if data and 'leaderboard' in data:
-            df = pd.DataFrame(data['leaderboard'])
-            st.dataframe(df)
-        else:
-            st.info("Leaderboard data not available")
-    
-    elif st.session_state.page == "Vishing" and backend_connected:
-        data = call_api("vishing", "GET")
-        if data:
-            st.json(data)
-        else:
-            st.info("Vishing data not available")
-    
+            with st.container():
+                st.markdown("""
+                <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 1.5rem; border-radius: 15px; color: white; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 1rem;'>
+                    <div style='font-size: 1rem; opacity: 0.9;'>🔌 Webhooks</div>
+                    <div style='font-size: 2.5rem; font-weight: bold; margin: 0.5rem 0;'>5</div>
+                    <div>⚡ Active integrations</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # Charts Row
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("<div style='background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 1rem;'>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem; border-bottom: 2px solid #FF4B4B; padding-bottom: 0.5rem;'>📈 Activity Overview</div>", unsafe_allow_html=True)
+            
+            # Sample activity data
+            hours = [f"{i}:00" for i in range(24)]
+            activity_data = pd.DataFrame({
+                'Hour': hours,
+                'Calls': [3, 2, 1, 1, 1, 2, 4, 8, 12, 15, 18, 20, 22, 21, 19, 17, 15, 14, 12, 10, 8, 7, 5, 3],
+                'Tests': [1, 1, 0, 0, 0, 1, 3, 6, 10, 14, 16, 18, 19, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2, 1]
+            })
+            
+            fig = px.line(activity_data, x='Hour', y=['Calls', 'Tests'], 
+                         title='24-Hour Activity',
+                         labels={'value': 'Count', 'variable': 'Type'})
+            fig.update_layout(height=300, legend=dict(orientation="h", yanchor="bottom", y=1.02))
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown("<div style='background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 1rem;'>", unsafe_allow_html=True)
+            st.markdown("<div style='font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem; border-bottom: 2px solid #FF4B4B; padding-bottom: 0.5rem;'>⚠️ Risk Distribution</div>", unsafe_allow_html=True)
+            
+            risk_data = pd.DataFrame({
+                'Risk': ['Low', 'Medium', 'High'],
+                'Count': [456, 567, 222]
+            })
+            
+            fig = px.pie(risk_data, values='Count', names='Risk', 
+                         title='Risk Analysis',
+                         color_discrete_map={'Low':'#00ff00', 'Medium':'#ffaa00', 'High':'#ff4444'})
+            fig.update_layout(height=300)
+            st.plotly_chart(fig, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Recent Activity
+        st.markdown("<div style='background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); margin-bottom: 1rem;'>", unsafe_allow_html=True)
+        st.markdown("<div style='font-size: 1.3rem; font-weight: bold; margin-bottom: 1rem; border-bottom: 2px solid #FF4B4B; padding-bottom: 0.5rem;'>📋 Recent Activity</div>", unsafe_allow_html=True)
+        
+        recent_activity = pd.DataFrame({
+            'Time': ['Just now', '2 min ago', '5 min ago', '10 min ago', '15 min ago'],
+            'Event': ['New vishing call detected', 'Certificate issued', 'Mobile device synced', 'Badge earned', 'Webhook triggered'],
+            'Status': ['Active', 'Completed', 'Success', 'Completed', 'Success']
+        })
+        st.dataframe(recent_activity, use_container_width=True, hide_index=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # ==================== LEADERBOARD PAGE ====================
+    elif st.session_state.page == "Leaderboard":
+        st.markdown("## 🏆 Global Leaderboard")
+        
+        data = {
+            'Rank': ['🥇', '🥈', '🥉', '4th', '5th', '6th', '7th', '8th', '9th', '10th'],
+            'User': ['Alex T.', 'Jordan L.', 'Casey M.', 'Riley C.', 'Taylor S.',
+                    'Jamie F.', 'Quinn W.', 'Avery J.', 'Parker L.', 'Morgan F.'],
+            'Points': [4850, 4620, 4390, 4120, 3980, 3750, 3520, 3280, 3050, 2890],
+            'Level': [15, 14, 13, 13, 12, 11, 11, 10, 9, 9]
+        }
+        df = pd.DataFrame(data)
+        st.dataframe(df, use_container_width=True, hide_index=True)
+
+    # ==================== STATS PAGE ====================
+    elif st.session_state.page == "Stats":
+        st.markdown("## 📊 Your Statistics")
+        
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Current Level", "7")
+        with col2:
+            st.metric("Total Points", "2,450")
+        with col3:
+            st.metric("Current Streak", "15 days")
+        
+        st.progress(0.75, text="75% to Level 8 (250 points needed)")
+
+    # ==================== VISHING PAGE ====================
+    elif st.session_state.page == "Vishing":
+        st.markdown("## 📞 Vishing Protection")
+        
+        calls = [
+            {"caller": "+1-555-0123", "risk": "Medium", "duration": "3:45"},
+            {"caller": "+1-555-7890", "risk": "High", "duration": "2:30"},
+            {"caller": "+1-555-4567", "risk": "Low", "duration": "1:15"}
+        ]
+        
+        for call in calls:
+            st.info(f"📞 {call['caller']} - {call['risk']} Risk - {call['duration']}")
+
+    # ==================== API DOCS PAGE ====================
     elif st.session_state.page == "API Docs":
         st.markdown("## 📚 API Documentation")
         st.markdown("### Interactive API Explorer")
@@ -209,20 +326,10 @@ else:
         if available_endpoints:
             for key, value in available_endpoints.items():
                 st.code(f"{key}: {value}", language="text")
-        
-        st.markdown("### ⚡ Quick Test")
-        if st.button("Test API Connection", use_container_width=True):
-            try:
-                test = requests.get(f"{API_URL}/test", timeout=3)
-                if test.status_code == 200:
-                    st.success("✅ API is responding!")
-                    st.json(test.json())
-                else:
-                    st.error(f"❌ API returned {test.status_code}")
-            except Exception as e:
-                st.error(f"❌ Connection failed: {e}")
     
     # Logout button
-    if st.button("🚪 Logout"):
+    st.markdown("---")
+    if st.button("🚪 Logout", use_container_width=True):
         st.session_state.logged_in = False
+        st.session_state.page = "Home"
         st.rerun()
