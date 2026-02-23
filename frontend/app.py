@@ -8,60 +8,30 @@ st.set_page_config(page_title="Phishing Platform", page_icon="🎣", layout="wid
 
 # Get API URL from secrets
 try:
-    API_URL = st.secrets["API_URL"].rstrip('/')  # Remove trailing slash if any
-    st.sidebar.success(f"✅ API URL: {API_URL}")
+    API_URL = st.secrets["API_URL"].rstrip('/')
+    st.sidebar.success(f"✅ Connected to: {API_URL}")
 except:
     API_URL = "https://phishing-simulation-6.onrender.com/api"
     st.sidebar.warning("⚠️ Using default API URL")
 
-# Test different endpoints to find the correct health check path
-endpoints_to_test = [
-    "/health",
-    "/api/health",
-    "/",
-    "/api/test"
-]
+# Test backend connection using the working /api/test endpoint
+backend_connected = False
+available_endpoints = {}
 
-health_ok = False
-for endpoint in endpoints_to_test:
-    try:
-        url = f"{API_URL}{endpoint}"
-        st.sidebar.write(f"Testing: {url}")
-        response = requests.get(url, timeout=3)
-        if response.status_code == 200:
-            st.sidebar.success(f"✅ Found working endpoint: {endpoint}")
-            HEALTH_ENDPOINT = endpoint
-            health_ok = True
-            break
-    except:
-        continue
-
-if not health_ok:
-    st.sidebar.error("❌ Could not find working health endpoint")
-    HEALTH_ENDPOINT = "/health"  # default
-
-# Define correct endpoint paths based on your working tests
-# From your curl test, these are working:
-# - /api/health -> returns {"status":"healthy","service":"backend"}
-# - /api/test -> returns API info
-# - /api/auth/demo-login -> login works
-
-# Set correct base paths
-API_BASE = API_URL  # Already includes /api
-
-# Test login endpoint explicitly
 try:
-    test_login = requests.post(
-        f"{API_BASE}/auth/demo-login",
-        json={"username": "demo_user", "password": "password"},
-        timeout=3
-    )
-    if test_login.status_code == 200:
-        st.sidebar.success("✅ Login endpoint working")
+    test_response = requests.get(f"{API_URL}/test", timeout=5)
+    if test_response.status_code == 200:
+        backend_connected = True
+        data = test_response.json()
+        available_endpoints = data.get('endpoints', {})
+        st.sidebar.success("✅ Backend connected")
+        st.sidebar.write("📋 Available endpoints:")
+        for key, value in available_endpoints.items():
+            st.sidebar.write(f"  • {key}: {value}")
     else:
-        st.sidebar.error(f"❌ Login endpoint returned {test_login.status_code}")
+        st.sidebar.error(f"❌ Backend returned {test_response.status_code}")
 except Exception as e:
-    st.sidebar.error(f"❌ Login test failed: {e}")
+    st.sidebar.error(f"❌ Cannot connect to backend: {e}")
 
 # Initialize session state
 if 'logged_in' not in st.session_state:
@@ -69,26 +39,43 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = ""
 
-# Function to make API calls with correct paths
-def call_api(endpoint):
-    """Call API with endpoint (should not include /api prefix)"""
+# Function to call API with correct paths
+def call_api(endpoint_type, method="GET", data=None):
+    """Call API using endpoint type from test response"""
+    if not backend_connected or endpoint_type not in available_endpoints:
+        return None
+    
+    endpoint = available_endpoints[endpoint_type]
+    url = f"{API_URL}{endpoint}"
+    
     try:
-        # Remove /api if present to avoid duplication
-        if endpoint.startswith('/api/'):
-            endpoint = endpoint[5:]
-        url = f"{API_BASE}/{endpoint.lstrip('/')}"
-        response = requests.get(url, timeout=3)
+        if method == "GET":
+            response = requests.get(url, timeout=3)
+        elif method == "POST":
+            response = requests.post(url, json=data, timeout=3)
+        else:
+            return None
+            
         if response.status_code == 200:
             return response.json()
         return None
     except:
         return None
 
-# Login function
+# Login function using the correct auth endpoint
 def do_login(username, password):
+    if not backend_connected:
+        # Fallback to demo mode
+        if username == "demo_user" and password == "password":
+            st.session_state.logged_in = True
+            st.session_state.username = username
+            return True, "Demo mode - backend not connected"
+        return False, "Backend not connected"
+    
+    # Try real login
     try:
         response = requests.post(
-            f"{API_BASE}/auth/demo-login",
+            f"{API_URL}/auth/demo-login",
             json={"username": username, "password": password},
             timeout=5
         )
@@ -97,7 +84,7 @@ def do_login(username, password):
             if data.get("success"):
                 st.session_state.logged_in = True
                 st.session_state.username = data.get("username", username)
-                return True, ""
+                return True, "Login successful"
             else:
                 return False, data.get("message", "Login failed")
         else:
@@ -105,16 +92,19 @@ def do_login(username, password):
     except Exception as e:
         return False, f"Connection error: {e}"
 
-# Rest of your app code (keep your existing UI code below)
-# ... 
-
-# For now, add a simple test UI
+# Main UI
 st.title("🎣 Phishing Simulation Platform")
 
 if not st.session_state.logged_in:
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("### 🔐 Login")
+        
+        # Show backend status
+        if backend_connected:
+            st.success("✅ Backend connected - using live data")
+        else:
+            st.warning("⚠️ Backend not connected - using demo mode")
         
         with st.form("login_form"):
             username = st.text_input("Username", value="demo_user")
@@ -123,12 +113,65 @@ if not st.session_state.logged_in:
             if st.form_submit_button("Login", use_container_width=True):
                 success, message = do_login(username, password)
                 if success:
-                    st.success("Login successful!")
+                    st.success(message)
                     st.rerun()
                 else:
                     st.error(message)
+        
+        st.markdown("---")
+        st.markdown("**Demo credentials:** demo_user / password")
 else:
     st.success(f"✅ Logged in as {st.session_state.username}")
-    if st.button("Logout"):
+    
+    # Simple navigation
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        if st.button("🏠 Home"):
+            st.session_state.page = "Home"
+    with col2:
+        if st.button("🏆 Leaderboard"):
+            st.session_state.page = "Leaderboard"
+    with col3:
+        if st.button("📊 Stats"):
+            st.session_state.page = "Stats"
+    with col4:
+        if st.button("📞 Vishing"):
+            st.session_state.page = "Vishing"
+    
+    st.markdown("---")
+    
+    # Page content
+    if 'page' not in st.session_state:
+        st.session_state.page = "Home"
+    
+    if st.session_state.page == "Home":
+        st.markdown("### Dashboard")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Active Calls", "3")
+        with col2:
+            st.metric("Certificates", "1,234")
+        with col3:
+            st.metric("Devices", "2")
+        with col4:
+            st.metric("Webhooks", "5")
+    
+    elif st.session_state.page == "Leaderboard" and backend_connected:
+        data = call_api("gamification", "GET")
+        if data and 'leaderboard' in data:
+            df = pd.DataFrame(data['leaderboard'])
+            st.dataframe(df)
+        else:
+            st.info("Leaderboard data not available")
+    
+    elif st.session_state.page == "Vishing" and backend_connected:
+        data = call_api("vishing", "GET")
+        if data:
+            st.json(data)
+        else:
+            st.info("Vishing data not available")
+    
+    # Logout button
+    if st.button("🚪 Logout"):
         st.session_state.logged_in = False
         st.rerun()
