@@ -1,0 +1,26 @@
+[theme]
+primaryColor = "#1E88E5"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[server]
+maxUploadSize = 200
+enableCORS = true
+enableXsrfProtection = true
+cookieSecret = "your-secret-key-here"
+
+[browser]
+gatherUsageStats = false
+
+[client]
+showErrorDetails = true
+
+[runner]
+magicEnabled = false
+fastReruns = true
+
+[logger]
+level = "error"
+messageFormat = "%(asctime)s - %(levelname)s - %(message)s"
